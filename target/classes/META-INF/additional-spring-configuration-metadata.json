@@ -1,8 +1,0 @@
-{
-  "properties": [
-    {
-      "name": "signed.enabled",
-      "type": "java.lang.String",
-      "description": "Description for signed.enabled."
-  }
-] }

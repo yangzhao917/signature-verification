@@ -1,20 +1,20 @@
 # signature-verification
 
-> 一个用于等级保护安全测评3.0完整性检查的工具（签名-验签）
+> 基于SM3对文件完整性检查的工具（签名-验签）
 
-用于对Linux环境下对系统指定的配置文件、日志目录、和可执行文件进行签名和验签处理，并记录结果。
+用于对Linux环境下对系统指定的配置文件、日志目录、和可执行文件进行签名和验签处理，并记录结果。根据签名记录，判断文件是否被篡改。
 
 ## 技术方案
 
-|     名称     |     版本      |                说明                |
-| :----------: | :-----------: | :--------------------------------: |
-|  SpringBoot  | 2.3.2.RELEASE | 基于Spring的应用框架，用于简化开发 |
-| mybatis-plus |     3.5.2     |             持久层框架             |
-|    hutool    |    5.8.16     |      一个小而全的Java工具类库      |
-|   knife4j    |     2.0.2     |             UI接口文档             |
-|  达梦数据库  |       8       |            国产化数据库            |
-|     JDK      |      1.8      |            Java开发工具            |
-|    Maven     |     3.5.2     |        用于管理项目版本依赖        |
+| 名称         | 版本          | 说明                               |
+| :----------- | :------------ | :--------------------------------- |
+| SpringBoot   | 2.3.2.RELEASE | 基于Spring的应用框架，用于简化开发 |
+| mybatis-plus | 3.5.2         | 持久层框架                         |
+| hutool       | 5.8.16        | 一个小而全的Java工具类库           |
+| knife4j      | 2.0.2         | UI接口文档                         |
+| 达梦数据库   | 8             | 国产化数据库                       |
+| JDK          | 1.8           | Java开发工具                       |
+| Maven        | 3.5.2         | 用于管理项目版本依赖               |
 
 ## 项目主要文件说明
 
@@ -45,13 +45,28 @@ signature-verification/
   - `main`：源码
   - `test`：测试源码
 
+## 待处理的问题
+
+- [ ] 本地签名、验签定时任务的实现
+- [ ] 数据库的设计优化
+
+## 调用流程
+
+- 文件签名
+
+![image-20230910042453494](https://p.ipic.vip/i8msep.png)
+
+- 文件验签
+
+![image-20230910042539116](https://p.ipic.vip/qhtvq8.png)
+
 ## 快速使用
 
 1. 构建项目
 
 使用`maven`和开发工具（我使用的是idea）构建打包项目，得到`signature-verification-0.0.1-SNAPSHOT.jar`文件。
 
-或者也可以使用`target`目录下构建好的signature-verification-0.0.1-SNAPSHOT.jar文件
+或者也可以使用发布的[Releases](https://github.com/yangzhao917/signature-verification/releases)文件，需修改application.properties数据库配置信息，或通过外部的application.properties配置启动项目。
 
 2. 部署程序和脚本
 
@@ -112,3 +127,15 @@ sh distribute_script.sh
 ## 感谢
 
 如果你觉得这个项目不错，请给予一个star。
+
+## 贡献
+
+请为我提交[Pull Request](https://github.com/yangzhao917/signature-verification/pulls)
+
+## issue
+
+[我要提交建议或问题](https://github.com/yangzhao917/signature-verification/issues)
+
+## LICENSE
+
+[MIT License](https://github.com/yangzhao917/signature-verification/blob/master/LICENSE)

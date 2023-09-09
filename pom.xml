@@ -83,7 +83,6 @@
             <version>2.0.2</version>
         </dependency>
 
-
     </dependencies>
 
     <build>
@@ -100,7 +99,25 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
+                <configuration>
+                    <timestampFormat>yyyyMMddHHmm</timestampFormat>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>create-timestamp</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <inherited>false</inherited>
+            </plugin>
         </plugins>
+        <finalName>
+            ${project.artifactId}-${timestamp}
+        </finalName>
     </build>
-
 </project>
