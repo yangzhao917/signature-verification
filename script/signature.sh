@@ -23,7 +23,10 @@ CLIENT_IP="$(hostname -I | awk '{print $1}')"  # linux地址的获取
 # CLIENT_IP="$(ifconfig en0 | grep inet | grep -v inet6 | awk '{print $2}')" # mac地址的获取
 
 # 定义接口日志存放目录
-api_log_dir="$(pwd)/log"
+api_log_dir="$(cd $(dirname $0); pwd)/log"
+
+# 互联网机器文件存放目录
+INTERNAT_HOST_DIR="/data/internet-host-log"
 
 # 定义待签的文件、目录列表
 file_list=(
@@ -118,7 +121,7 @@ main(){
             # 对每个文件进行SHA256签名
             get_file_sha256 "$file" "$1"
         else
-            # 如果是日志目录
+            # 如果是rsyslog日志目录
             if [[ $file =~ "rsyslog-bak" ]] ; then
                 param=""
                 if [[ "$options" == "signature" ]]; then
@@ -131,6 +134,12 @@ main(){
                     get_file_sha256 "$log_file" "$options"
                 }
                 done
+            else
+                log_files=$(find "$file" -type f -not -path '*/\.*')
+                # 查询该目录前一天生成的文件,排除隐藏文件
+                for log_file in $log_files; do {
+                    get_file_sha256 "$log_file" "$options"
+                }
             fi
         fi
     } &
@@ -140,8 +149,6 @@ main(){
     endTime=`date +%s`
     echo "总共耗时:" $(($endTime-$beginTime)) "秒"
 }
-
-
 
 # 生成日志目录
 generate_log_dir() {
