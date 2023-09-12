@@ -126,7 +126,7 @@ main(){
                 param=""
                 if [[ "$options" == "signature" ]]; then
                     # 签名操作：查询前一天
-                    param="-mtime 1" 
+                    param="-mtime 1"
                 fi
                 log_files=$(find "$file" ${param} -type f -not -path '*/\.*')
                 # 查询该目录前一天生成的文件,排除隐藏文件
@@ -140,6 +140,7 @@ main(){
                 for log_file in $log_files; do {
                     get_file_sha256 "$log_file" "$options"
                 }
+                done
             fi
         fi
     } &
