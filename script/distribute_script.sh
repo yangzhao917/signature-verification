@@ -7,6 +7,8 @@
 ### 根据需要修改配置文件信息
 ###
 
+# 安装：apt-get install -y expect
+
 # 分发的文件列表
 file_list=("signature.sh")
 
@@ -18,7 +20,7 @@ remote_userpass="Asdf3.14"  # 远程主机密码
 
 # 分发的目标机器列表
 target_machine_list=(
-    "172.25.233.11"
+    "172.25.233.11"   
 )
 
 # 检查expect是否安装
@@ -38,7 +40,7 @@ isInstalledExpect() {
 copyFileToRemote() {
     file=$1
     ip=$2
-    expect > /dev/null <<EOF
+    expect <<EOF
             # 发送文件到远程服务器
             spawn scp $file $remote_username@$ip:$remote_file_dir
             expect {

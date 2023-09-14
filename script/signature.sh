@@ -11,12 +11,12 @@
 ###   -h         显示脚本帮助信息
 
 # 签名、验签接口（正式）
-# SIGN_API_URL="http://172.25.16.29:48080/sign-verify/signature/saveOrUpdate"
-# VERIFY_API_URL="http://172.25.16.29:48080/sign-verify/verify/server"
+SIGN_API_URL="http://172.25.16.29:48080/sign-verify/signature/saveOrUpdate"
+VERIFY_API_URL="http://172.25.16.29:48080/sign-verify/verify/server"
 
 # 签名、验签接口（开发）
-SIGN_API_URL="http://localhost:48080/sign-verify/signature/saveOrUpdate"
-VERIFY_API_URL="http://localhost:48080/sign-verify/verify/server"
+# SIGN_API_URL="http://localhost:48080/sign-verify/signature/saveOrUpdate"
+# VERIFY_API_URL="http://localhost:48080/sign-verify/verify/server"
 
 # 获取客户端IP
 CLIENT_IP="$(hostname -I | awk '{print $1}')"  # linux地址的获取
@@ -24,9 +24,6 @@ CLIENT_IP="$(hostname -I | awk '{print $1}')"  # linux地址的获取
 
 # 定义接口日志存放目录
 api_log_dir="$(cd $(dirname $0); pwd)/log"
-
-# 互联网机器文件存放目录
-INTERNAT_HOST_DIR="/data/internet-host-log"
 
 # 定义待签的文件、目录列表
 file_list=(
@@ -121,31 +118,23 @@ main(){
             # 对每个文件进行SHA256签名
             get_file_sha256 "$file" "$1"
         else
+            param=""
             # 如果是rsyslog日志目录
             if [[ $file =~ "rsyslog-bak" ]] ; then
-                param=""
                 if [[ "$options" == "signature" ]]; then
                     # 签名操作：查询前一天
-                    param="-mtime 1"
+                    param="-mtime 1" 
                 fi
-                log_files=$(find "$file" ${param} -type f -not -path '*/\.*')
-                # 查询该目录前一天生成的文件,排除隐藏文件
-                for log_file in $log_files; do {
-                    get_file_sha256 "$log_file" "$options"
-                }
-                done
-            else
-                log_files=$(find "$file" -type f -not -path '*/\.*')
-                # 查询该目录前一天生成的文件,排除隐藏文件
-                for log_file in $log_files; do {
-                    get_file_sha256 "$log_file" "$options"
-                }
-                done
             fi
+            log_files=$(find "$file" ${param} -type f -not -path '*/\.*')
+            # 查询该目录前一天生成的文件,排除隐藏文件
+            for log_file in $log_files; do {
+                get_file_sha256 "$log_file" "$options"
+            }
+            done
         fi
-    } &
+    }
     done
-    wait
 
     endTime=`date +%s`
     echo "总共耗时:" $(($endTime-$beginTime)) "秒"
