@@ -194,6 +194,18 @@ public class SignServiceImpl extends ServiceImpl<SignRecordMapper, SignRecord> i
     }
 
     @Override
+    public List<SignRecord> findByClientIp(String clientIp) {
+        log.debug("操作：根据客户端IP查询签名记录 客户端IP：{}", clientIp);
+        QueryWrapper<SignRecord> queryWrapper = new QueryWrapper<>();
+        queryWrapper
+                .lambda()
+                .eq(SignRecord::getFromIp, clientIp)
+                .or().like(SignRecord::getFilePath, clientIp)
+                .orderByDesc(SignRecord::getCreatedTime);
+        return signReocrdService.list(queryWrapper);
+    }
+
+    @Override
     public void deleteById(String id) throws RuntimeException{
         log.debug("删除签名记录，签名记录ID：{}", id);
         // 判断这个ID是否存在

@@ -58,6 +58,13 @@ public interface ISignReocrdService extends IService<SignRecord> {
     SignRecord findByFilePathAndClientIp(String path, String clientIp);
 
     /**
+     * 根据文件路径获取签名记录
+     * @param clientIp 客户端IP地址
+     * @return
+     */
+    List<SignRecord> findByClientIp(String clientIp);
+
+    /**
      * 根据签名记录ID删除签名记录
      */
     void deleteById(String id) throws RuntimeException;

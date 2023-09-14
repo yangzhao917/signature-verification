@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author ：Yangzhao
@@ -67,6 +68,24 @@ public class SignController {
         try {
             SignRecord signRecord = signReocrdService.findByFilePathAndClientIp(filePath, clientIp);
             return HttpResult.success(signRecord);
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return HttpResult.failed(ex.getMessage());
+        }
+    }
+
+    @ApiOperation("根据客户端IP查询签名记录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clientIp", value = "客户端Ipv4地址", required = true)
+    })
+    @GetMapping(value = "/findByClientIp")
+    public HttpResult findByClientIP(String clientIp){
+        if (StrUtil.isEmpty(clientIp)){
+            return HttpResult.failed("参数不能为空");
+        }
+        try {
+            List<SignRecord> signRecordList = signReocrdService.findByClientIp(clientIp);
+            return HttpResult.success(signRecordList);
         }catch (Exception ex){
             ex.printStackTrace();
             return HttpResult.failed(ex.getMessage());
