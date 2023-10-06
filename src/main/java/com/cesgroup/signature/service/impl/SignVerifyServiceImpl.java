@@ -5,6 +5,7 @@ import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.net.NetUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -58,13 +59,13 @@ public class SignVerifyServiceImpl extends ServiceImpl<SignVerifyRecordMapper, S
     @Transactional
     @Override
     public void signVerify() throws Exception {
-        if (!signedConfig.getEnabled()){
+        if (!signedConfig.getEnabled()) {
             throw new RuntimeException("文件签名没有启用，请先配置");
         }
 
         // 获取文件配置参数，过滤掉不存在的文件，只保留存在的
         List<String> fileConfigParamList = fileConfig.getFileConfigParam();
-        if (CollectionUtil.isEmpty(fileConfigParamList)){
+        if (CollectionUtil.isEmpty(fileConfigParamList)) {
             return;
         }
         // 获取验签成功后的签名记录
@@ -73,17 +74,18 @@ public class SignVerifyServiceImpl extends ServiceImpl<SignVerifyRecordMapper, S
         // 获取所有文件签名
         List<SignVerifyRecord> allFileSign = this.getSignedRecordAfterVerifyingSignature(allFiles);
         // 保存文件签名
-        if (CollectionUtil.isNotEmpty(allFileSign)){
+        if (CollectionUtil.isNotEmpty(allFileSign)) {
             signVerifyRecordService.saveBatch(allFileSign);
         }
     }
 
     /**
      * 获取验签成功后的签名记录
-     * @author: yangzhao
-     * @date: 2023/9/1 1:31 上午
+     *
      * @param allFiles
      * @return java.util.List<com.cesgroup.signverify.entity.SignVerifyRecord>
+     * @author: yangzhao
+     * @date: 2023/9/1 1:31 上午
      */
     private List<SignVerifyRecord> getSignedRecordAfterVerifyingSignature(List<File> allFiles) throws IOException, NoSuchAlgorithmException {
         // 存储验签成功后的签名记录
@@ -98,16 +100,16 @@ public class SignVerifyServiceImpl extends ServiceImpl<SignVerifyRecordMapper, S
             // 根据文件路径和ip查询有没有相关的签名记录，如果存在则进行验签操作
             String localhost = NetUtil.getLocalhostStr();
             SignRecord sign = signService.findByFilePathAndClientIp(path, localhost);
-            if (BeanUtil.isEmpty(sign)){
+            if (BeanUtil.isEmpty(sign)) {
                 continue;
             }
             // 调用外部接口，进行验签处理，验签成功后保存验签记录到验签记录表
             boolean verify = signedService.verifySigned(Base64.encode(currentHash), sign.getSignValue());
             SignVerifyRecord signVerifyRecord = new SignVerifyRecord();
             BeanUtils.copyProperties(sign, signVerifyRecord);
-            if (verify){
+            if (verify) {
                 signVerifyRecord.setVerifyStatus(SignStatusEnum.PASS.getType());
-            }else {
+            } else {
                 signVerifyRecord.setVerifyStatus(SignStatusEnum.NO_PASS.getType());
             }
             // 验签创建时间
@@ -118,21 +120,23 @@ public class SignVerifyServiceImpl extends ServiceImpl<SignVerifyRecordMapper, S
     }
 
     @Override
-    public void signVerify(SignRecord signVO){
-        if (!signedConfig.getEnabled()){
+    public void signVerify(SignRecord signVO) {
+        if (!signedConfig.getEnabled()) {
             throw new RuntimeException("文件签名未启用 signed.enabled:" + signedConfig.getEnabled());
         }
+        String ipAddr = signService.getIpAddrFromFilePath(signVO);
+        if (StrUtil.isBlank(ipAddr)){
+            throw new RuntimeException("验签失败，IP地址不能为空");
+        }
         // 判断签名记录在签名表中是否存在
-        SignRecord signEntity = signService.findByFilePathAndClientIp(signVO.getFilePath(), signVO.getFromIp());
+        SignRecord signEntity = signService.findByFilePathAndClientIp(signVO.getFilePath(), ipAddr);
         // 存在签名记录
         if (Objects.nonNull(signEntity)) {
             // 对文件签名信息进行验签，签名表存在签名记录并且新签名和签名表中记录一致则验签成功
             String encode = Base64.encode(signVO.getSignValue());
             String signValue = signEntity.getSignValue();
-            log.debug("签名原文:{},签名消息:{}", encode, signValue);
             boolean result = signedService.verifySigned(encode, signValue);
-            log.debug("验签响应内容：{}", result);
-
+            log.debug("\n来源IP:{}\n，签名文件:{}\n,文件HASH:{}\n,签名原文:{}\n,签名消息:{},\n验签响应内容:{}", signVO.getFromIp(), signVO.getFilePath(), signVO.getSignValue(), encode, signValue, result);
             SignVerifyRecord signVerifyRecord = new SignVerifyRecord();
             signVerifyRecord.setId(signEntity.getId());
             signVerifyRecord.setSignValue(signEntity.getSignValue());
@@ -145,7 +149,7 @@ public class SignVerifyServiceImpl extends ServiceImpl<SignVerifyRecordMapper, S
             }
             // 保存签名记录
             signVerifyRecordService.save(signVerifyRecord);
-        }else {
+        } else {
             throw new RuntimeException("文件没有签名");
         }
 

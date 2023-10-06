@@ -93,15 +93,19 @@ public class SignServiceImpl extends ServiceImpl<SignRecordMapper, SignRecord> i
     @Override
     public void serverSignature(SignRecord signRecord) throws RuntimeException{
         log.debug("文件签名 ====> START");
-        SignRecord signEntity = signReocrdService.findByFilePathAndClientIp(signRecord.getFilePath(), signRecord.getFromIp());
+        // 如果是日志文件，则从日志中获取IP地址
+        String ipAddr = this.getIpAddrFromFilePath(signRecord);
+        SignRecord signEntity = signReocrdService.findByFilePathAndClientIp(signRecord.getFilePath(), ipAddr);
         // 是否存在签名记录
         if (Objects.nonNull(signEntity)){
-            throw new RuntimeException(signEntity.getFilePath() + "文件已签名");
+            throw new RuntimeException(String.format("文件已签名:%s", signEntity.getFilePath()));
         }
         signRecord.setCreatedTime(DateUtil.date(Calendar.getInstance()));
         // 文件签名
         String signResult = signedService.sign(Base64.encode(signRecord.getSignValue()));
+        log.debug("\n来源IP:{}\n，签名文件:{}\n,文件HASH:{}\n,签名消息:{}\n,", signRecord.getFromIp(), signRecord.getFilePath(), signRecord.getSignValue(), signResult);
         signRecord.setSignValue(signResult);
+        signRecord.setFromIp(ipAddr);
         signRecord = this.signTypeConfig(signRecord);
         signReocrdService.saveOrUpdate(signRecord);
         log.debug("文件签名 ====> END");
@@ -185,11 +189,12 @@ public class SignServiceImpl extends ServiceImpl<SignRecordMapper, SignRecord> i
     public SignRecord findByFilePathAndClientIp(String path, String clientIp) {
         log.debug("操作：根据文件路径和客户端IP查询签名记录 文件路径：{} 客户端IP：{}", path, clientIp);
         QueryWrapper<SignRecord> queryWrapper = new QueryWrapper<>();
-        queryWrapper
-                .lambda()
-                .eq(SignRecord::getFilePath, path)
-                .eq(SignRecord::getFromIp, clientIp)
-                .orderByDesc(SignRecord::getCreatedTime);
+        if (path.contains("rsyslog-bak") || path.contains("internet-host-log")){
+            queryWrapper.eq("FILE_PATH", path);
+        }else {
+            queryWrapper.eq("FILE_PATH", path);
+            queryWrapper.eq("FROM_IP", clientIp);
+        }
         return signReocrdService.getOne(queryWrapper);
     }
 
@@ -216,4 +221,18 @@ public class SignServiceImpl extends ServiceImpl<SignRecordMapper, SignRecord> i
         signReocrdService.deleteById(id);
     }
 
+    public String getIpAddrFromFilePath(SignRecord signRecord){
+        String ipAddr = "";
+        try {
+            String filePath = signRecord.getFilePath();
+            if (filePath.contains("rsyslog-bak") || filePath.contains("internet-host-log")) {
+                ipAddr = filePath.split("/")[3];
+            }else {
+                ipAddr = signRecord.getFromIp();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return ipAddr;
+    }
 }
